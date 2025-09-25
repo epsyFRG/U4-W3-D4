@@ -1,6 +1,6 @@
-package epicode.dao;
+package emilianomassari.dao;
 
-import epicode.entities.Event;
+import emilianomassari.entities.*;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
@@ -27,6 +27,28 @@ public class EventsDAO {
 
     public Event findById(long id) {
         return em.find(Event.class, id);
+    }
+
+    public java.util.List<Concerto> getConcertiInStreaming(boolean inStreaming) {
+        return em.createQuery("SELECT c FROM Concerto c WHERE c.inStreaming = :inStreaming", Concerto.class)
+                .setParameter("inStreaming", inStreaming)
+                .getResultList();
+    }
+
+    public java.util.List<Concerto> getConcertiPerGenere(Genere genere) {
+        return em.createQuery("SELECT c FROM Concerto c WHERE c.genere = :genere", Concerto.class)
+                .setParameter("genere", genere)
+                .getResultList();
+    }
+
+    public java.util.List<PartitaDiCalcio> getPartiteVinteInCasa() {
+        return em.createNamedQuery("PartitaDiCalcio.getPartiteVinteInCasa", PartitaDiCalcio.class)
+                .getResultList();
+    }
+
+    public java.util.List<PartitaDiCalcio> getPartiteVinteInTrasferta() {
+        return em.createNamedQuery("PartitaDiCalcio.getPartiteVinteInTrasferta", PartitaDiCalcio.class)
+                .getResultList();
     }
 
     public void findByIdAndDelete(long id) {

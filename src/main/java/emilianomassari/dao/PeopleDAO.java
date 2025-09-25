@@ -1,6 +1,6 @@
-package epicode.dao;
+package emilianomassari.dao;
 
-import epicode.entities.Person;
+import emilianomassari.entities.Person;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;

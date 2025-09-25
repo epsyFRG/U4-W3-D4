@@ -1,4 +1,4 @@
-package epicode.entities;
+package emilianomassari.entities;
 
 import javax.persistence.*;
 import java.time.LocalDate;
@@ -6,6 +6,8 @@ import java.util.List;
 
 @Entity
 @Table(name = "eventi")
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+@DiscriminatorColumn(name = "dtype")
 public class Event {
     @Id
     @GeneratedValue

@@ -1,7 +1,6 @@
-package epicode.entities;
+package emilianomassari.entities;
 
 import javax.persistence.*;
-import java.util.List;
 
 @Entity
 @Table(name = "locations")

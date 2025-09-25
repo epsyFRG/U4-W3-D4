@@ -1,11 +1,12 @@
-package epicode;
+package emilianomassari;
 
 import com.github.javafaker.Faker;
-import epicode.dao.AttendancesDAO;
-import epicode.dao.EventsDAO;
-import epicode.dao.LocationsDAO;
-import epicode.dao.PeopleDAO;
-import epicode.entities.*;
+import emilianomassari.dao.AttendancesDAO;
+import emilianomassari.dao.EventsDAO;
+import emilianomassari.dao.LocationsDAO;
+import emilianomassari.dao.PeopleDAO;
+import emilianomassari.entities.*;
+import java.util.HashSet;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
@@ -29,13 +30,60 @@ public class Application {
         // ******************** SALVATAGGIO LOCATIONS, UTENTI E EVENTI ************************
 
         Location location1 = new Location(faker.address().city(), faker.address().cityName());
-        // locationsDAO.save(location1);
+        locationsDAO.save(location1);
 
         Location location2 = new Location(faker.address().city(), faker.address().cityName());
-        // locationsDAO.save(location2);
+        locationsDAO.save(location2);
 
         Person person1 = new Person(faker.name().firstName(), faker.name().lastName(), faker.internet().emailAddress(),  LocalDate.now(), rndm.nextInt(0, 2) == 0 ? 'M' : 'F');
-        // peopleDAO.save(person1);
+        peopleDAO.save(person1);
+        // ******************** SEED EVENTI DERIVATI ************************
+        // Concerto
+        Concerto concerto1 = new Concerto(
+                "Rock Night", LocalDate.now().plusDays(10), faker.lorem().fixedString(40),
+                TipoEvento.PUBBLICO, 500, rndm.nextInt(0, 2) == 0 ? location1 : location2,
+                Genere.ROCK, true);
+        Concerto concerto2 = new Concerto(
+                "Classica in Teatro", LocalDate.now().plusDays(20), faker.lorem().fixedString(40),
+                TipoEvento.PRIVATO, 200, rndm.nextInt(0, 2) == 0 ? location1 : location2,
+                Genere.CLASSICO, false);
+        eventsDAO.save(concerto1);
+        eventsDAO.save(concerto2);
+
+        // Partita di Calcio (una vinta in casa, una in trasferta)
+        PartitaDiCalcio partitaCasa = new PartitaDiCalcio(
+                "Derby", LocalDate.now().plusDays(5), faker.lorem().fixedString(30),
+                TipoEvento.PUBBLICO, 30000, rndm.nextInt(0, 2) == 0 ? location1 : location2,
+                "SquadraA", "SquadraB", "SquadraA", 2, 1);
+        PartitaDiCalcio partitaTrasferta = new PartitaDiCalcio(
+                "Big Match", LocalDate.now().plusDays(7), faker.lorem().fixedString(30),
+                TipoEvento.PUBBLICO, 30000, rndm.nextInt(0, 2) == 0 ? location1 : location2,
+                "SquadraC", "SquadraD", "SquadraD", 0, 1);
+        eventsDAO.save(partitaCasa);
+        eventsDAO.save(partitaTrasferta);
+
+        // Gara di Atletica
+        HashSet<Person> atleti = new HashSet<>();
+        atleti.add(person1);
+        GaraDiAtletica gara = new GaraDiAtletica(
+                "Meeting Cittadino", LocalDate.now().plusDays(15), faker.lorem().fixedString(30),
+                TipoEvento.PUBBLICO, 1000, rndm.nextInt(0, 2) == 0 ? location1 : location2,
+                atleti, person1);
+        eventsDAO.save(gara);
+
+        // ******************** ESECUZIONE JPQL / NAMED QUERIES ************************
+        System.out.println("Concerti in streaming:");
+        eventsDAO.getConcertiInStreaming(true).forEach(System.out::println);
+
+        System.out.println("Concerti ROCK:");
+        eventsDAO.getConcertiPerGenere(Genere.ROCK).forEach(System.out::println);
+
+        System.out.println("Partite vinte in casa:");
+        eventsDAO.getPartiteVinteInCasa().forEach(System.out::println);
+
+        System.out.println("Partite vinte in trasferta:");
+        eventsDAO.getPartiteVinteInTrasferta().forEach(System.out::println);
+
 
 /*        for (int i = 0; i < 20; i++) {
             eventsDAO.save(new Event(
@@ -53,19 +101,32 @@ public class Application {
         Person person = peopleDAO.findById(23);
         Event event = eventsDAO.findById(24);
 
-        Attendance partecipazione = new Attendance(person, event);
-        // attendancesDAO.save(partecipazione);
+        if (person == null) {
+            System.out.println("Persona con id 23 non trovata");
+        }
+        if (event == null) {
+            System.out.println("Evento con id 24 non trovato");
+        }
 
-        // Stampo eventi a cui partecipa la persona 23
-        person.getListaPartecipazioni().forEach(System.out::println);
+        if (person != null && event != null) {
+            Attendance partecipazione = new Attendance(person, event);
+            attendancesDAO.save(partecipazione);
 
-        // Stampo elenco partecipanti evento 24
-        event.getListaPartecipazioni().forEach(System.out::println);
+            // Stampo eventi a cui partecipa la persona 23
+            if (person.getListaPartecipazioni() != null) {
+                person.getListaPartecipazioni().forEach(System.out::println);
+            }
 
-        // ******************** CASCADING ************************
+            // Stampo elenco partecipanti evento 24
+            if (event.getListaPartecipazioni() != null) {
+                event.getListaPartecipazioni().forEach(System.out::println);
+            }
 
-        // Eliminando un evento dovrebbe eliminare anche le partecipazioni ad esso collegate
-        eventsDAO.findByIdAndDelete(24);
+            // ******************** CASCADING ************************
+
+            // Eliminando un evento dovrebbe eliminare anche le partecipazioni ad esso collegate
+            eventsDAO.findByIdAndDelete(24);
+        }
 
 
         em.close();
